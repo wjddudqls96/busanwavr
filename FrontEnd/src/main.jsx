@@ -6,7 +6,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import Test from "./routes/Test.jsx";
 import Login from "./routes/Login.jsx";
-import Signup from "./routes/Signup.jsx"; // "Signup" 컴포넌트를 import합니다.
+import Signup from "./routes/Signup.jsx";
 import RootLayout from "./routes/RootLayout.jsx";
 import "./index.css";
 
@@ -27,8 +27,8 @@ if (rootElement) {
               element: React.createElement(Login),
             },
             {
-              path: "/signup", // "signup" 페이지를 위한 라우트를 추가합니다.
-              element: React.createElement(Signup), // "Signup" 컴포넌트를 사용합니다.
+              path: "/signup",
+              element: React.createElement(Signup),
             },
           ],
         },

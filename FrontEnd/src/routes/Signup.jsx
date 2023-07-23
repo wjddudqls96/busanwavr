@@ -1,32 +1,27 @@
 import React, { useState } from "react";
-// import Button from "../components/lib/button";
+import axios from 'axios';
 
 const Signup = () => {
-  const [id, setId] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [birth, setBirth] = useState("");
+  const [profileImage, setProfileImage] = useState(null);
 
   const [idMessage, setIdMessage] = useState("");
   const [nameMessage, setNameMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [passwordConfirmMessage, setPasswordConfirmMessage] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
-  const [phoneMessage, setPhoneMessage] = useState("");
-  const [birthMessage, setBirthMessage] = useState("");
 
   const [isId, setIsId] = useState(false);
   const [isName, setIsName] = useState(false);
   const [isPassword, setIsPassword] = useState(false);
   const [isPasswordConfirm, setIsPasswordConfirm] = useState(false);
   const [isEmail, setIsEmail] = useState(false);
-  const [isPhone, setIsPhone] = useState(false);
-  const [isBirth, setIsBirth] = useState(false);
 
 //   카테고리
+// TODO : 3개 미만으로 선택시 알림메시지
   const [selectedCategories, setSelectedCategories] = useState([]);
 
   const handleCategorySelection = (category) => {
@@ -39,30 +34,37 @@ const Signup = () => {
     }
   };
 
-//   
-  const onChangeId = (e) => {
-    const currentId = e.target.value;
-    setId(currentId);
-    const idRegExp = /^[a-zA-z0-9]{4,12}$/;
-
-    if (!idRegExp.test(currentId)) {
-      setIdMessage("~~만 입력해 주세요");
-      setIsId(false);
-    } else {
-      setIdMessage("사용가능한 아이디 입니다.");
-      setIsId(true);
-    }
+// 
+  const onChangeProfileImage = (e) => {
+    const imageFile = e.target.files[0];
+    setProfileImage(imageFile);
   };
 
+  const onChangeEmail = (e) => {
+    const currentEmail = e.target.value;
+    setEmail(currentEmail);
+    const emailRegExp =
+      /^[A-Za-z0-9_]+[A-Za-z0-9]*[@]{1}[A-Za-z0-9]+[A-Za-z0-9]*[.]{1}[A-Za-z]{1,3}$/;
+
+    if (!emailRegExp.test(currentEmail)) {
+      setEmailMessage("이메일 형식이 올바르지 않습니다.");
+      setIsEmail(false);
+    } else {
+      setEmailMessage("사용 가능한 이메일 입니다.");
+      setIsEmail(true);
+    }
+  };
   const onChangeName = (e) => {
     const currentName = e.target.value;
     setName(currentName);
-
-    if (currentName.length < 2 || currentName.length > 5) {
-      setNameMessage("닉네임은 ~~로 입력해주세요");
+  
+    const regex = /^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]*$/;
+  
+    if (!regex.test(currentName) || currentName.length < 2 || currentName.length > 8) {
+      setNameMessage("닉네임은 특수문자와 공백 없이 2자 이상 8자 이하여야 합니다.");
       setIsName(false);
     } else {
-      setNameMessage("사용가능한 닉네임 입니다.");
+      setNameMessage("사용 가능한 닉네임 입니다.");
       setIsName(true);
     }
   };
@@ -94,69 +96,65 @@ const Signup = () => {
       setIsPasswordConfirm(true);
     }
   };
-
-  const onChangeEmail = (e) => {
-    const currentEmail = e.target.value;
-    setEmail(currentEmail);
-    const emailRegExp =
-      /^[A-Za-z0-9_]+[A-Za-z0-9]*[@]{1}[A-Za-z0-9]+[A-Za-z0-9]*[.]{1}[A-Za-z]{1,3}$/;
-
-    if (!emailRegExp.test(currentEmail)) {
-      setEmailMessage("이메일의 형식이 올바르지 않습니다.");
-      setIsEmail(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("아아아ㅏ");
+  
+    // 상태 값 업데이트 이후 즉시 formData 구성
+    if (isEmail && isName && isPassword && isPasswordConfirm && selectedCategories.length >= 3) {
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("nickname", name);
+      formData.append("password", password);
+      formData.append("category", JSON.stringify(selectedCategories));
+      formData.append("profileImg", profileImage);
+  
+      console.log(formData);
+  
+      const apiUrl = "http://18.217.191.122:8080/user";
+  
+      try {
+        const response = await axios.post(apiUrl, formData);
+        // 성공 모달 표시
+        alert("회원가입이 완료되었습니다.");
+  
+        // 로그인 페이지로 리디렉션
+        window.location.href = "/login";
+      } catch (error) {
+        // 서버에서 보내준 오류 메시지 확인
+        console.error("폼 제출 중 오류 발생:", error.response.data);
+      }
     } else {
-      setEmailMessage("사용 가능한 이메일 입니다.");
-      setIsEmail(true);
+      // 필수 필드들이 모두 입력되지 않았을 경우, 에러 메시지 표시 또는 적절한 조치를 취해주세요.
+      alert("모든 필수 정보를 입력해주세요.");
     }
   };
-
-  const onChangePhone = (getNumber) => {
-    const currentPhone = getNumber;
-    setPhone(currentPhone);
-    const phoneRegExp = /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/;
-
-    if (!phoneRegExp.test(currentPhone)) {
-      setPhoneMessage("올바른 형식이 아닙니다.");
-      setIsPhone(false);
-    } else {
-      setPhoneMessage("사용 가능한 번호입니다.");
-      setIsPhone(true);
-    }
-  };
-
-  const addHyphen = (e) => {
-    const currentNumber = e.target.value;
-    setPhone(currentNumber);
-    if (currentNumber.length == 3 || currentNumber.length == 8) {
-      setPhone(currentNumber + "-");
-      onChangePhone(currentNumber + "-");
-    } else {
-      onChangePhone(currentNumber);
-    }
-  };
-
-  const onChangeBirth = (e) => {
-    const currentBirth = e.target.value;
-    setBirth(currentBirth);
-  };
+  
+  
 
   return (
     <>
       <h3>Sign Up</h3>
       <div className="form">
         <div className="form-el">
-          <label htmlFor="id">Id</label> <br />
-          <input id="id" name="id" value={id} onChange={onChangeId} />
-          <p className="message"> {idMessage} </p>
+          <label htmlFor="profileImage">프로필 이미지</label>
+          <br />
+          <input
+            type="file"
+            id="profileImage"
+            name="profileImage"
+            onChange={onChangeProfileImage}
+          />
         </div>
 
         <div className="form-el">
-          <label htmlFor="name">Nick Name</label> <br />
-          <input id="name" name="name" value={name} onChange={onChangeName} />
-          <p className="message">{nameMessage}</p>
+          <label htmlFor="email">이메일</label> <br />
+          <input id="email" name="name" value={email} onChange={onChangeEmail} />
+          <p className="message">{emailMessage}</p>
         </div>
+
         <div className="form-el">
-          <label htmlFor="password">Password</label> <br />
+          <label htmlFor="password">비밀번호</label> <br />
           <input
             id="password"
             name="password"
@@ -166,7 +164,7 @@ const Signup = () => {
           <p className="message">{passwordMessage}</p>
         </div>
         <div className="form-el">
-          <label htmlFor="passwordConfirm">Password Confirm</label> <br />
+          <label htmlFor="passwordConfirm">비밀번호 확인</label> <br />
           <input
             id="passwordConfirm"
             name="passwordConfirm"
@@ -176,72 +174,154 @@ const Signup = () => {
           <p className="message">{passwordConfirmMessage}</p>
         </div>
         <div className="form-el">
-          <label htmlFor="email">Email</label> <br />
-          <input id="email" name="name" value={email} onChange={onChangeEmail} />
-          <p className="message">{emailMessage}</p>
-        </div>
-        <div className="form-el">
-          <label htmlFor="phone">Phone</label> <br />
-          <input id="phone" name="phone" value={phone} onChange={addHyphen} />
-          <p className="message">{phoneMessage}</p>
-        </div>
-        <div className="form-el">
-          <label htmlFor="birth">Birth</label> <br />
-          <input id="birth" name="birth" value={birth} onChange={onChangeBirth} />
-          <p className="message">{birthMessage}</p>
+          <label htmlFor="name">닉네임</label> <br />
+          <input id="name" name="name" value={name} onChange={onChangeName} />
+          <p className="message">{nameMessage}</p>
         </div>
         <br />
         <br />
         <div className="form-el">
-        <label>카테고리 (최대 3개 선택)</label> <br />
+        <label>관심 카테고리를 선택해주세요. (최소3개, 최대5개)</label> <br />
         <label>
           <input
             type="checkbox"
-            checked={selectedCategories.includes("여행")}
-            onChange={() => handleCategorySelection("여행")}
+            checked={selectedCategories.includes("힐링")}
+            onChange={() => handleCategorySelection("힐링")}
           />
-          여행
+          힐링
         </label>{" "}
         <br />
         <label>
           <input
             type="checkbox"
-            checked={selectedCategories.includes("먹방")}
-            onChange={() => handleCategorySelection("먹방")}
+            checked={selectedCategories.includes("액티비티")}
+            onChange={() => handleCategorySelection("액티비티")}
           />
-          먹방
+          액티비티
         </label>{" "}
         <br />
         <label>
           <input
             type="checkbox"
-            checked={selectedCategories.includes("잠자기")}
-            onChange={() => handleCategorySelection("잠자기")}
+            checked={selectedCategories.includes("체험")}
+            onChange={() => handleCategorySelection("체험")}
           />
-          잠자기
+          체험
         </label>{" "}
         <br />
         <label>
           <input
             type="checkbox"
-            checked={selectedCategories.includes("영화시청")}
-            onChange={() => handleCategorySelection("영화시청")}
+            checked={selectedCategories.includes("도보")}
+            onChange={() => handleCategorySelection("도보")}
           />
-          영화시청
+          도보
         </label>{" "}
         <br />
         <label>
           <input
             type="checkbox"
-            checked={selectedCategories.includes("축구")}
-            onChange={() => handleCategorySelection("축구")}
+            checked={selectedCategories.includes("캠핑")}
+            onChange={() => handleCategorySelection("캠핑")}
           />
-          축구
+          캠핑
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("호캉스")}
+            onChange={() => handleCategorySelection("호캉스")}
+          />
+          호캉스
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("맛집")}
+            onChange={() => handleCategorySelection("맛집")}
+          />
+          맛집
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("도시")}
+            onChange={() => handleCategorySelection("도시")}
+          />
+          도시
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("자연")}
+            onChange={() => handleCategorySelection("자연")}
+          />
+          자연
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("문화")}
+            onChange={() => handleCategorySelection("문화")}
+          />
+          문화
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("쇼핑")}
+            onChange={() => handleCategorySelection("쇼핑")}
+          />
+          쇼핑
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("역사")}
+            onChange={() => handleCategorySelection("역사")}
+          />
+          역사
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("축제")}
+            onChange={() => handleCategorySelection("축제")}
+          />
+          축제
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("핫플")}
+            onChange={() => handleCategorySelection("핫플")}
+          />
+          핫플
+        </label>{" "}
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategories.includes("카페")}
+            onChange={() => handleCategorySelection("카페")}
+          />
+          카페
         </label>{" "}
         <br />
         <br />
       </div>
-      <button type="submit">Submit</button>
+      <button type="submit" onClick={handleSubmit}>
+        가입하기
+      </button>
       </div>
     </>
   );
