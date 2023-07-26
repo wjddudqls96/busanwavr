@@ -3,7 +3,8 @@ import RootLayout from "./routes/RootLayout";
 import Test from "./routes/Test";
 import Dashboard from "./routes/Dashboard";
 import Home from "./routes/Home";
-import Signup from "./routes/Signup.jsx";
+import Signup from "./routes/Signup";
+import ChatRoom from "./routes/ChatRoom";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/test" element={<Test />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/chatroom" element={<ChatRoom />} />
         </Route>
         <Route
           path="*"
