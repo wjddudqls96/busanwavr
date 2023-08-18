@@ -1,0 +1,17 @@
+#cameraview {
+    border-radius: 12px;
+    width: 200px;
+    height: 150px;
+}
+
+.blackCamera {
+    border: 3px solid rgb(63, 71, 118);
+    width: 200px;
+    height: 150px;
+    border-radius: 12px;
+    background-color: rgb(17, 17, 17);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
