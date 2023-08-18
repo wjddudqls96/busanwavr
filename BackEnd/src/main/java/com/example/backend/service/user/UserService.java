@@ -1,0 +1,207 @@
+package com.example.backend.service.user;
+
+import com.example.backend.dto.user.AuthCodeDto;
+import com.example.backend.dto.user.AuthPasswordDto;
+import com.example.backend.dto.user.GuideSignUpDto;
+import com.example.backend.dto.user.GuideUpdateDto;
+import com.example.backend.dto.user.UserSignUpDto;
+import com.example.backend.dto.user.UserUpdateDto;
+import com.example.backend.exception.type.DuplicatedValueException;
+import com.example.backend.model.category.Category;
+import com.example.backend.model.category.CategoryRepository;
+import com.example.backend.model.user.User;
+import com.example.backend.model.user.UserRepository;
+import com.example.backend.model.usercategory.UserCategory;
+import com.example.backend.model.usercategory.UserCategoryRepository;
+import com.example.backend.util.awsS3.S3Uploader;
+import com.example.backend.util.category.CategoryUtil;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import javax.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@AllArgsConstructor
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
+    private final UserCategoryRepository userCategoryRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final S3Uploader s3Uploader;
+    private final CategoryUtil categoryUtil;
+
+    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    private final static String DEFAULT_PROFILE_IMAGE = "https://busanwavr.s3.ap-northeast-2.amazonaws.com/%EB%B6%80%EA%B8%B0.png";
+
+
+    @Transactional
+    public void signup(UserSignUpDto.Request request, String encodedPassword)
+            throws DuplicatedValueException, IllegalArgumentException {
+        emailExistValidCheck(request.getEmail());
+        nicknameExistValidCheck(request.getNickname());
+
+        boolean isUnRegistered = false;
+
+        // 사용자가 선택한 카테고리 이름들이 모두 등록 가능한지 체크
+        for (String categoryName : request.getCategory()) {
+            if (categoryRepository.findByName(categoryName) == null) {
+                isUnRegistered = true;
+            }
+        }
+
+        if (isUnRegistered) {
+            throw new IllegalArgumentException("등록된 카테고리만 추가 가능합니다.");
+        }
+        User user = request.toUser(DEFAULT_PROFILE_IMAGE, encodedPassword);
+        userRepository.save(user);
+        // 사용자가 선택한 카테고리 이름들을 UserCategory 객체로 변환하고 저장
+        for (String categoryName : request.getCategory()) {
+            userCategoryCreate(user, categoryRepository.findByName(categoryName));
+        }
+    }
+
+    @Transactional
+    public void guideSignUp(GuideSignUpDto.Request request, String encodedPassword) {
+        emailExistValidCheck(request.getEmail());
+        nicknameExistValidCheck(request.getNickname());
+        User user = request.toGuide(DEFAULT_PROFILE_IMAGE, encodedPassword);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void updatePassword(User user, AuthPasswordDto.Request request) {
+        boolean isSamePassword = passwordEncoder.matches(request.getPassword(), user.getPassword());
+
+        if(isSamePassword){
+            throw new IllegalArgumentException("변경할 비밀번호가 현재의 비밀번호와 같습니다.");
+        }
+
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        User findUser = userRepository.findById(user.getId()).get();
+
+        findUser.setPassword(encodedPassword);
+        userRepository.save(findUser);
+    }
+
+    public void saveEmailAuth(String email, String code) throws IllegalAccessException {
+        ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+        valueOperations.set(email, code);
+        redisTemplate.expire(email, 5, TimeUnit.MINUTES);
+    }
+
+    public void emailExistValidCheck(String email) throws DuplicatedValueException {
+        if (userRepository.findByEmail(email) != null) {
+            throw new DuplicatedValueException("이메일이 중복되어 이메일 인증이 불가합니다.");
+        }
+    }
+
+    public void nicknameExistValidCheck(String nickname) {
+        if (userRepository.existsByNickname(nickname)) {
+            throw new DuplicatedValueException("닉네임 중복입니다. 다시 확인하세요.");
+        }
+    }
+
+    public boolean isCodeAuth(AuthCodeDto.Request request) {
+        ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+        String auth = valueOperations.get(request.getEmail());
+        return auth.equals(request.getCode());
+    }
+
+    @Transactional
+    public GuideUpdateDto.Response guideUpdate(User user, GuideUpdateDto.Request request)
+            throws IOException, IllegalAccessException {
+
+        String newNickname = request.getNickname();
+        String fileUrl;
+
+        // 파일이 없을 경우 기존의 이미지를 유지
+        if (request.getProfileImg() == null) {
+            fileUrl = user.getProfileImg();
+        } else {
+            fileUrl = s3Uploader.upload(request.getProfileImg());
+        }
+
+        // 닉네임을 변경했을 때만 닉네임 유효성 검사
+        if (!user.getNickname().equals(newNickname)) {
+            nicknameExistValidCheck(newNickname);
+            user.setNickname(newNickname);
+        }
+
+        user.setProfileImg(fileUrl);
+        user.setIntroduction(request.getIntroduction());
+        userRepository.save(user);
+
+        GuideUpdateDto.Response response = new GuideUpdateDto.Response(user);
+        return response;
+    }
+
+    public void userCategoryCreate(User user, Category category) {
+        UserCategory userCategory = new UserCategory();
+        userCategory.setUser(user);
+        userCategory.setCategory(category);
+        userCategory.setDate(new Date());
+        userCategoryRepository.save(userCategory);
+    }
+
+    public void userCategoryDelete(User user) {
+        List<UserCategory> userCategories = userCategoryRepository.findAllByUser(user);
+
+        for (UserCategory userCategory : userCategories) {
+            userCategoryRepository.delete(userCategory);
+        }
+    }
+
+    @Transactional
+    public UserUpdateDto.Response userUpdate(User user, UserUpdateDto.Request request)
+            throws IOException, IllegalAccessException {
+
+        String newNickname = request.getNickname();
+        String fileUrl;
+
+        // 파일이 없을 경우 기존의 이미지를 유지
+        if (request.getProfileImg() == null) {
+            fileUrl = user.getProfileImg();
+        } else {
+            fileUrl = s3Uploader.upload(request.getProfileImg());
+        }
+
+        // 닉네임을 변경했을 때만 닉네임 유효성 검사
+        if (!user.getNickname().equals(newNickname)) {
+            nicknameExistValidCheck(newNickname);
+            user.setNickname(newNickname);
+        }
+
+        user.setProfileImg(fileUrl);
+        userRepository.save(user);
+
+        userCategoryDelete(user);
+
+        List<Category> categories = new ArrayList<>();
+        for (String categoryName : request.getCategory()) {
+            if (categoryRepository.findByName(categoryName) == null) {
+                Category category = request.toCategory(categoryName);
+                categories.add(category);
+                categoryRepository.save(category);
+                userCategoryCreate(user, category);
+            } else {
+                userCategoryCreate(user, categoryRepository.findByName(categoryName));
+            }
+        }
+
+        List<String> categoryList = new ArrayList<>();
+        categoryUtil.userCategoryList(user, categoryList);
+
+        UserUpdateDto.Response response = new UserUpdateDto.Response(user, categoryList);
+
+        return response;
+    }
+}
