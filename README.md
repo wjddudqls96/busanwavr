@@ -1,6 +1,6 @@
-## ✈️ 부산와Vr - [간단한 설명] 
-
-<div align=center>![로고.PNG](./로고.PNG)</div>
+## ✈️ 부산와Vr
+![그림1](https://github.com/wjddudqls96/busanwavr/assets/59672589/104735c0-c913-4715-92a7-df3603cd1cf4)
+<div align=center></div>
 
 
 ### 🔗 부산와Vr 링크 : [Site Link](https://busanwavr.store/)
@@ -34,13 +34,21 @@
 ### 🛠 기능 요약 
 ---
 - #### 투어 개설
+![투어등록](https://github.com/wjddudqls96/busanwavr/assets/59672589/a81f4ae5-2a7a-431d-b6a5-d1f2db801b64)
 - #### 투어 검색
+![투어검색](https://github.com/wjddudqls96/busanwavr/assets/59672589/78cd12af-704e-48dc-8879-0135c3235164)
 - #### 여행 추천 서비스
+![추천투어](https://github.com/wjddudqls96/busanwavr/assets/59672589/459e0f70-6095-46bd-8aa1-04f4453493f4)
 - #### 메이트 모집
+![메이트등록](https://github.com/wjddudqls96/busanwavr/assets/59672589/8d436ec5-17a4-4c5e-acb2-f810bcb7e4f0)
 - #### 360도 VR 라이브 스트리밍
+![Jan-25-2024 11-57-30](https://github.com/wjddudqls96/busanwavr/assets/59672589/5219bd69-4d8e-4104-8b06-67f1689f93c2)
+![vr투어](https://github.com/wjddudqls96/busanwavr/assets/59672589/37c451e9-2903-408e-abd1-c3b754868060)
 - #### 실시간 채팅 & Speech-To-Text
-- #### 투표 기능 & 모션 캡쳐
-- #### 다국어 지원
+![tts](https://github.com/wjddudqls96/busanwavr/assets/59672589/4a18cd7c-850f-47a5-b0f6-5d43d9db2f35)
+- #### 모션 캡쳐를 이용한 투표기능
+![motion](https://github.com/wjddudqls96/busanwavr/assets/59672589/83098a98-499c-4183-9814-156de8d20752)
+<img width="320" alt="motion" src="https://github.com/wjddudqls96/busanwavr/assets/59672589/787df5c2-0de8-4c97-b3ec-33ee6503c869">
 
 
 ### ✔ 주요 기술
@@ -176,7 +184,7 @@ FrontEnd
   - 작업하면서 의사소통 역량을 높이기 위해 사용
   - 페어 프로그래밍을 지향하기 위해 사용
 
-### 👩‍💻 멤버 구성 - 이미지로 할지? 역할을 더 상세히 나눌지?
+### 👩‍💻 멤버 구성
 --- 
 - 김남우(팀장) : Front-End
 - 서정희 : Front-End
@@ -203,6 +211,6 @@ FrontEnd
 
 ### ✔ 프로젝트 결과물
 ---
-- [포팅메뉴얼](./exec/TUPLI_포팅_메뉴얼.docx)
-- [중간발표자료](./ppt/TUPLI_중간발표.pptx)
-- [최종발표자료](./ppt/TUPLI_최종발표.pptx)
+- [포팅메뉴얼](./exec/부산와Vr_포팅_메뉴얼.docx)
+- [발표자료](./docs/busanwavr.pptx)
+
